@@ -1,4 +1,5 @@
 from flask import Flask
+from flask import Response
 from flask import request
 from bs4 import BeautifulSoup
 from urllib.request import urlopen
@@ -70,7 +71,7 @@ def search():
     content = ""
     
     for company in scrape_for(query):
-        content +=  "<div>" + \
+        content +=  "<div style=\"margin: 20px 0px\">" + \
                         "<div>Nazwa: " + company["name"] + "</div>" + \
                         "<div>Mail: " + company["mail"] + "</div>" + \
                         "<div>Telefon: " + company["phone"] + "</div>" + \
@@ -96,6 +97,6 @@ def vcard():
 #     vc.add("adr")
 #     vc.adr.value = request.form.get("address")
     
-    return vc.serialize()
+    return Response(vc.serialize(), mimetype="text/vcard")
 
 app.run("0.0.0.0", 8080)
