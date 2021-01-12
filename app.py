@@ -2,6 +2,7 @@ from flask import Flask
 from flask import request
 from bs4 import BeautifulSoup
 from urllib.request import urlopen
+from vobject import vCard
 
 app = Flask(__name__)
 
@@ -68,19 +69,33 @@ def search():
     query = request.args.get("query")
     content = ""
     
-    for c in scrape_for(query):
+    for company in scrape_for(query):
         content +=  "<div>" + \
-                        "<div>Nazwa: " + c["name"] + "</div>" + \
-                        "<div>Mail: " + c["mail"] + "</div>" + \
-                        "<div>Telefon: " + c["phone"] + "</div>" + \
-                        "<div>Adres: " + c["address"] + "</div>" + \
-                        vCardButtonFor(c) + \
+                        "<div>Nazwa: " + company["name"] + "</div>" + \
+                        "<div>Mail: " + company["mail"] + "</div>" + \
+                        "<div>Telefon: " + company["phone"] + "</div>" + \
+                        "<div>Adres: " + company["address"] + "</div>" + \
+                        vCardButtonFor(company) + \
                     "</div>"
                     
     return page_with(content)
 
-@app.route("/vcard")
+@app.route("/vcard", methods = ["POST"])
 def vcard():
-    return ""
+    vc = vCard()
+    
+    vc.add("fn")
+    vc.fn.value = request.form.get("name")
+    
+    vc.add("email")
+    vc.email.value = request.form.get("mail")
+     
+    vc.add("tel")
+    vc.tel.value = request.form.get("phone")
+     
+#     vc.add("adr")
+#     vc.adr.value = request.form.get("address")
+    
+    return vc.serialize()
 
 app.run("0.0.0.0", 8080)
