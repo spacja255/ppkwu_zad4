@@ -3,7 +3,7 @@ from flask import Response
 from flask import request
 from bs4 import BeautifulSoup
 from urllib.request import urlopen
-from vobject import vCard
+import vobject
 
 app = Flask(__name__)
 
@@ -23,10 +23,10 @@ def scrape_for(query):
     
     for e in selected_elements:
         result.append({
-            "name": e.select(company_name_selector)[0].getText(),
-            "mail": e.select(company_mail_selector)[0]["data-company-email"],
-            "phone": e.select(company_phone_selector)[0]["title"],
-            "address": e.select(company_address_selector)[0].getText()
+            "name": e.select(company_name_selector)[0].getText().strip(),
+            "mail": e.select(company_mail_selector)[0]["data-company-email"].strip(),
+            "phone": e.select(company_phone_selector)[0]["title"].strip(),
+            "address": e.select(company_address_selector)[0].getText().strip()
         })
         
     return result
@@ -83,19 +83,12 @@ def search():
 
 @app.route("/vcard", methods = ["POST"])
 def vcard():
-    vc = vCard()
+    vc = vobject.vCard()
     
-    vc.add("fn")
-    vc.fn.value = request.form.get("name")
-    
-    vc.add("email")
-    vc.email.value = request.form.get("mail")
-     
-    vc.add("tel")
-    vc.tel.value = request.form.get("phone")
-     
-#     vc.add("adr")
-#     vc.adr.value = request.form.get("address")
+    vc.add("fn").value = request.form.get("name")
+    vc.add("email").value = request.form.get("mail")
+    vc.add("tel").value = request.form.get("phone")
+    vc.add("adr").value = vobject.vcard.Address(request.form.get("address"))
     
     return Response(vc.serialize(), mimetype="text/vcard")
 
