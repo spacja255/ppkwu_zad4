@@ -9,17 +9,27 @@ def scrape_for(query):
     url = "https://panoramafirm.pl/szukaj?k={}".format(query)
     company_selector = "#company-list li.company-item"
     company_name_selector = "a.company-name"
+    company_mail_selector = "a.icon-envelope"
+    company_phone_selector = "a.icon-telephone"
+    company_address_selector = "div.address"
     
     response = urlopen(url)
     html = BeautifulSoup(response.read())
     selected_elements = html.select(company_selector)
     
-    out_str = ""
+    result = []
     
     for e in selected_elements:
-        out_str += e.select(company_name_selector)[0].getText() + "<br />"
+#         out_str += e.select(company_name_selector)[0].getText() + "<br />"
+        #  maili, numerów telefonów, adresów
+        result.append({
+            "name": e.select(company_name_selector)[0].getText(),
+            "mail": e.select(company_mail_selector)[0]["data-company-email"],
+            "phone": e.select(company_phone_selector)[0]["data-original-title"],
+            "address": e.select(company_address_selector)[0]["href"],
+        })
         
-    return out_str
+    return result
 
 def page_with(content):
     return """
@@ -47,7 +57,7 @@ def index():
 @app.route("/search")
 def search():
     query = request.args.get("query")
-    return page_with("<code>" + scrape_for(query) + "</code>")
+    return page_with("<code>" + str(scrape_for(query)) + "</code>")
 
 @app.route("/vcard/<url>")
 def vcard(url):
