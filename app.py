@@ -20,13 +20,11 @@ def scrape_for(query):
     result = []
     
     for e in selected_elements:
-#         out_str += e.select(company_name_selector)[0].getText() + "<br />"
-        #  maili, numerów telefonów, adresów
         result.append({
             "name": e.select(company_name_selector)[0].getText(),
             "mail": e.select(company_mail_selector)[0]["data-company-email"],
-            "phone": e.select(company_phone_selector)[0]["data-original-title"],
-            "address": e.select(company_address_selector)[0]["href"],
+            "phone": e.select(company_phone_selector)[0]["title"],
+            "address": e.select(company_address_selector)[0].getText()
         })
         
     return result
@@ -44,6 +42,17 @@ def page_with(content):
         </body>
         </html>
     """
+    
+def vCardButtonFor(company):
+    return """
+        <form method="post" action="/vcard">
+            <input type="hidden" name="name" value=\"""" + company["name"] + """\" />
+            <input type="hidden" name="mail" value=\"""" + company["mail"] + """\" />
+            <input type="hidden" name="phone" value=\"""" + company["phone"] + """\" />
+            <input type="hidden" name="address" value=\"""" + company["address"] + """\" />
+            <input type="submit" value="Generuj vCard" />
+        </form>
+    """
 
 @app.route("/")
 def index():
@@ -57,10 +66,21 @@ def index():
 @app.route("/search")
 def search():
     query = request.args.get("query")
-    return page_with("<code>" + str(scrape_for(query)) + "</code>")
+    content = ""
+    
+    for c in scrape_for(query):
+        content +=  "<div>" + \
+                        "<div>Nazwa: " + c["name"] + "</div>" + \
+                        "<div>Mail: " + c["mail"] + "</div>" + \
+                        "<div>Telefon: " + c["phone"] + "</div>" + \
+                        "<div>Adres: " + c["address"] + "</div>" + \
+                        vCardButtonFor(c) + \
+                    "</div>"
+                    
+    return page_with(content)
 
-@app.route("/vcard/<url>")
-def vcard(url):
+@app.route("/vcard")
+def vcard():
     return ""
 
 app.run("0.0.0.0", 8080)
